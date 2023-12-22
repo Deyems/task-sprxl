@@ -2,24 +2,25 @@
   "name": "server",
   "version": "1.0.0",
   "description": "Sproxil Task",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "build": "tsc",
     "check-types": "tsc --noEmit --pretty --skipLibCheck --incremental --project tsconfig.json --strict",
-    "dev": "nodemon",
+    "dev": "nodemon app.ts",
     "format": "npx prettier --write .",
     "lint": "npx eslint src/",
     "pre-commit": "lint-staged",
     "prepare": "husky install",
-    "start": "node -r ts-node/register/transpile-only -r tsconfig-paths/register build/server.js",
-    "start-prod": "node build/server.js",
+    "start": "node -r ts-node/register/transpile-only -r tsconfig-paths/register build/app.js",
+    "start-prod": "node build/app.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "tsc --watch & nodemon build/index.js"
+    "watch": "tsc --watch & nodemon build/app.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
@@ -34,10 +35,12 @@
     "mysql2": "^3.6.5",
     "ts-custom-error": "^3.3.1",
     "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "winston": "^3.11.0",
     "xss-clean": "^0.1.4"
   },
   "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
     "@types/compression": "^1.7.5",
     "@types/cookie-parser": "^1.4.6",
     "@types/cors": "^2.8.17",
