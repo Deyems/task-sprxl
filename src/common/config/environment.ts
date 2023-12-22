@@ -1,11 +1,14 @@
 import { IEnvironment } from '../interfaces/environment';
+import dotenv from 'dotenv';
+dotenv.config();
 
 export const ENVIRONMENT: IEnvironment = {
     APP: {
         NAME: process.env.APP_NAME,
-        PORT: parseInt(process.env.PORT || process.env.APP_PORT || '3000'),
+        PORT: parseInt(process.env.PORT || '3000'),
         ENV: process.env.NODE_ENV,
         CLIENT: process.env.FRONTEND_URL!,
+        PASSWORD_SALT: parseInt(process.env.PASSWORD_SALT!),
     },
     DB: {
         URL: process.env.DB_URL!,

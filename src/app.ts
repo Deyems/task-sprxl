@@ -3,6 +3,7 @@ import { logger, stream } from "./common/utils/logger";
 import routes from "./routes"
 import helmet, { HelmetOptions } from 'helmet';
 import cookieParser from "cookie-parser";
+//@ts-ignore
 import xss from 'xss-clean';
 import hpp from "hpp";
 import cors from "cors";
@@ -13,7 +14,7 @@ import helmetCsp from 'helmet-csp';
 import http from 'http';
 import { ENVIRONMENT } from "./common/config/environment";
 import errorHandler from "./errorHandler";
-
+import { connectDatabase } from "./database";
 
 
 /**
@@ -22,6 +23,7 @@ import errorHandler from "./errorHandler";
 const app: Express = express();
 const port = ENVIRONMENT.APP.PORT;
 const appName = ENVIRONMENT.APP.NAME;
+console.log(appName,'checkinin app name');
 
 
 /**
@@ -123,15 +125,17 @@ app.use(
  * Logger Middleware
  */
 app.use(morgan(ENVIRONMENT.APP.ENV !== 'development' ? 'combined' : 'dev', { stream }));
+
 // Add request time to req object
 app.use((req: Request, _res: Response, next: NextFunction) => {
+    //@ts-ignore
     req['requestTime'] = new Date().toISOString();
     next();
 });
 
 
 //Declard your routes entry here
-app.use("/api/v1", routes);
+app.use("/api/v1/sproxil", routes);
 
 
 app.all('/*', async (req, res) => {
@@ -159,9 +163,16 @@ app.use(errorHandler);
 // Create Server.
 const server = http.createServer(app);
 
-// Listen on a PORT
+//Connect to database and listen on a port on server.
 const appServer = server.listen(port, async () => {
-    console.log('=> ' + appName + ' app listening on port ' + port + '!');
+    connectDatabase().getConnection()
+    .then(res => {
+        const {config, connection} = res;
+        if (!connection.config.pool._closed) {
+            logger.info('=> ' + config.host + ' database is connected' + '!');
+        }
+    });
+    // console.log('=> ' + appName + ' app listening on port ' + port + '!');
     logger.info('=> ' + appName + ' app listening on port ' + port + '!');
 });
 
