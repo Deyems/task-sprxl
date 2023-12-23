@@ -17,6 +17,10 @@ export interface IUser {
 
 export type RegisteredUser = Omit<IUser, 'password'>;
 
+export interface UserWithAccountNo extends RegisteredUser {
+    accountNumber: string;
+}
+
 export type LoggedInUser = Omit<IUser, 'firstName' | 'lastName'>;
 
 // export interface LoggedInUser {

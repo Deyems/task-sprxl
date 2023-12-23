@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from "express";
-import { loginService, registerService } from "../services/userService";
+import { loginService, registerService, fetchUserService } from "../services/userService";
 import { AppResponse } from "../common/utils/appResponse";
 import { ENVIRONMENT } from "../common/config/environment";
+import { isValidNumber } from "../common/utils/utilityFxns";
 
 
 const registerHandler = async (req:Request, res:Response, next:NextFunction) => {
@@ -26,7 +27,20 @@ const loginHandler = async (req: Request, res: Response, next: NextFunction) => 
     }
 }
 
+const getUser = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const {id} = req.params;
+        if (!isValidNumber(id as string)) return AppResponse(res, 400, {}, "Invalid Param");
+        let foundUser = await fetchUserService(Number(id));
+        return AppResponse(res, 200, foundUser, "Successfully retrieved user"); 
+    } catch (error) {
+        console.error(error, 'error at getting User');
+        next(error);
+    }
+}
+
 export {
     registerHandler,
     loginHandler,
+    getUser,
 }

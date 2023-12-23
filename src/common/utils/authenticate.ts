@@ -1,31 +1,33 @@
 import { Request, Response, NextFunction } from "express";
-import jwt, {SignOptions} from "jsonwebtoken";
+import jwt, {JwtPayload, SignOptions} from "jsonwebtoken";
 
 import { logger } from "./logger";
 import bcrypt from "bcrypt";
 import { ENVIRONMENT } from "../config/environment";
 import AppError from "./appError";
-import { AuthUserRequest, IHashData } from "../interfaces/user";
+import { IHashData } from "../interfaces/user";
 
 // Middleware for JWT Authentication
-const authenticateJWT = async (req: AuthUserRequest, res:Response, next:NextFunction) => {
-    const token = pickAuthHeader(req);
-    
-    if (!token) {
-        logger.error('token not passed ' + new Date(Date.now()) + ' ' + req.originalUrl);
-        return res.sendStatus(401);
+const authenticateJWT = async (req: Request, res:Response, next:NextFunction) => {
+    try {
+        let token = pickAuthHeader(req);
+        if (!token) {
+            logger.error('token not passed ' + new Date(Date.now()) + ' ' + req.originalUrl);
+            return res.sendStatus(401).json({ message: "Token Not set" });
+        }
+        if(token.startsWith("Bearer")){
+            token = token.split(" ")[1];
+        }
+        const user: Record<string, string | number> | JwtPayload | string = jwt.verify(token, ENVIRONMENT.JWT.ACCESS_KEY);
+        if( ((user as Record<string, string | number>).id !== req.params.id) ){
+            throw new AppError('No Permission to view another user information', 401, {});
+        }
+        if (!user) throw new AppError('not verified', 401, {});
+        return next();
+    } catch (error) {
+        next(error);
     }
-
-    const user = await jwt.verify(token, 'your_secret_key');
-
-    if(!user) throw new AppError('not verified', 401, {});
-    req.user = user;
-    return next();
-    // , (err, user) => {
-    //     if (err) return res.sendStatus(403);
-    //     req.user = user;
-    //     next();
-    // });
+    
 };
 
 const pickAuthHeader = (req: Request): string => {

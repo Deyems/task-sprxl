@@ -1,11 +1,16 @@
 import {Router, Request, Response, NextFunction} from "express";
-import { registerHandler, loginHandler } from "../controllers/userController";
+import { registerHandler, loginHandler, getUser } from "../controllers/userController";
+// import { verifyUser } from "../middlewares/auth";
+import { authenticateJWT } from "../common/utils/authenticate";
+import { accountDepositHandler, accountWithdrawHandler } from "../controllers/AccountController";
+
 const router = Router();
 
 router.post('/register', registerHandler);
 router.post('/login', loginHandler);
-router.post('/deposit', registerHandler);
-router.post('/withdraw', registerHandler);
+router.get('/user/:id', authenticateJWT, getUser);
+router.post('/deposit', authenticateJWT, accountDepositHandler);
+router.post('/withdraw', authenticateJWT, accountWithdrawHandler);
 router.post('/account-statement', registerHandler);
 
 router.use('alive', (_req: Request, res: Response, _next: NextFunction) =>
