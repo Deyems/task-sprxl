@@ -1,38 +1,65 @@
-import { logger } from "../common/utils/logger";
-import { connectDatabase } from "../database";
-import { LoggedInUser, User } from "../common/interfaces/user";
-import { comparePassword, hashPassword } from "../common/utils/authenticate";
 import { RowDataPacket } from "mysql2/promise";
 
-const registerService = async (user: Omit<User, 'id'>) => {
+import { logger } from "../common/utils/logger";
+import { connectDatabase } from "../database";
+import { IUser, LoggedInUser, RegisteredUser, User } from "../common/interfaces/user";
+import { comparePassword, hashPassword, generateToken } from "../common/utils/authenticate";
+import { ENVIRONMENT } from "../common/config/environment";
+import AppError from "../common/utils/appError";
+// import AppError from "../common/utils/appError";
+
+const registerService = async (user: IUser) => {
     //Interact with database here. 
     logger.info('log from register Service Fxn' + JSON.stringify(user));
+
     user.password = await hashPassword(user.password);
     const [result] = await connectDatabase().query('INSERT INTO User (firstName, lastName, email, password) VALUES (?, ?, ?, ?)', [user.firstName, user.lastName, user.email, user.password]);
     const insertId = (result as any).insertId as number;
-    return { id: insertId, ...user };
+    
+    //create an account for each user registered.
+    const accountNumber = await createAccount(insertId);
+    
+    const modifiedUser:RegisteredUser = {
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+    }
+    return { accountNumber, ...modifiedUser };
 }
 
-const loginService = async (user: LoggedInUser) => {
-    console.log(user, 'used at login info');
-    // data pulled should then be checked based on the password.
-    const [ rows ] = await connectDatabase().query('SELECT * FROM Users WHERE email = ?', [user.email]);
+const createAccount = async (id: number ): Promise<string | null> => {
+    const [result] = await connectDatabase().query('INSERT INTO Account (userId, accountNumber) VALUES (?, LPAD(?, 10, 0) )', [id, id]);
+    const insertedID = (result as RowDataPacket).insertId;
+    const [insertedRow] = await connectDatabase().query('SELECT * FROM Account WHERE accountId = ?', [insertedID]);
+    const accountNumber = (insertedRow as RowDataPacket)[0].accountNumber as string;
+    return accountNumber;
+}
 
-    // return Array.isArray(rows) && rows.length > 0 ? rows[0] as User : null;
-    if (!rows){
-        //
-        // no user found
+const loginService = async (user: LoggedInUser): Promise<string> => {
+    const [ rows ] = await connectDatabase().query('SELECT * FROM User WHERE email = ?', [user.email]);
+    if (!rows || (rows as RowDataPacket).length == 0){
+        throw new AppError("Invalid Email/Password", 400, {});
     }
 
     let foundUser = (rows as RowDataPacket[])[0] as User;
+    if(!foundUser){
+        throw new AppError("Invalid Email/Password", 400, {});
+    }
 
     let verified = await comparePassword(user.password, foundUser.password);
-    console.log(verified, 'is password same');
+    if(!verified){
+        throw new AppError("Invalid Email/Password", 400, {});
+    }
 
-    //sign the payload to generate a token for the user.
+    const token = generateToken(
+        { id: foundUser.userId.toString(), email: foundUser.email },
+        { expiresIn: ENVIRONMENT.JWT_EXPIRES_IN.ACCESS }
+    );
+    return token;
 }
 
 export {
     registerService, 
-    loginService
+    loginService,
+    createAccount,
 }
