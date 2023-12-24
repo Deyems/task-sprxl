@@ -6,14 +6,16 @@ import { IUser, LoggedInUser, User } from "../common/interfaces/user";
 import { comparePassword, hashPassword, generateToken } from "../common/utils/authenticate";
 import { ENVIRONMENT } from "../common/config/environment";
 import AppError from "../common/utils/appError";
-import { createUser, fetchUserById } from "../repository/userRepository";
+import { createUserRepository, fetchUserById } from "../repository/userRepository";
+import { fetchTransactionUserAccountStatement } from "../repository/transactionRepository";
+import { fetchAccountBalance } from "../repository/accountRepository";
 
 const registerService = async (user: IUser) => {
     //Interact with database here. 
     logger.info('log from register Service Fxn' + JSON.stringify(user));
 
     user.password = await hashPassword(user.password);
-    const modifiedUser = await createUser(user);
+    const modifiedUser = await createUserRepository(user);
     return { ...modifiedUser };
 }
 
@@ -45,8 +47,45 @@ const fetchUserService = async (id: number) => {
     return userFetched;
 }
 
+const getAccountStatementService = async (userId: number) => {
+    let connection = null;
+    try {
+        connection = await connectDatabase().getConnection();
+
+        await connection.beginTransaction();
+
+        const transactionHistory = await fetchTransactionUserAccountStatement(userId);
+
+        // Commit the transaction
+        await connection.commit();
+
+        console.log(transactionHistory, 'history of transaction for this user');
+        return transactionHistory;
+    } catch (error) {
+
+        console.error(error, 'error while withdrawing???');
+        if (connection) {
+            await connection.rollback();
+        }
+        throw new AppError("Error while getting Account Statement", 500, {});
+
+    }finally{
+        if (connection) {
+            connection.release();
+        }
+    }
+    
+}
+
+const getBalanceService = async (userId: number) => {
+    let balanceResult = await fetchAccountBalance(userId);
+    return balanceResult;
+}
+
 export {
     registerService, 
     loginService,
     fetchUserService,
+    getAccountStatementService,
+    getBalanceService,
 }

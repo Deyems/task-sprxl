@@ -13,18 +13,35 @@ const updateAccount = async(data: Record<string, number>) => {
 const createAccount = async (id: number): Promise<string | null> => {
     const [result] = await connectDatabase().query('INSERT INTO Account (userId, accountNumber) VALUES (?, LPAD(?, 10, 0) )', [id, id]);
     const insertedID = (result as RowDataPacket).insertId;
-    const accountNumber = fetchAccountById(insertedID);
+    const accountNumber = fetchAccountNumberById(insertedID);
     return accountNumber;
 }
 
-const fetchAccountById = async (id: number) => {
+//Internal
+const fetchAccountNumberById = async (id: number) => {
     const [insertedRow] = await connectDatabase().query('SELECT * FROM Account WHERE accountId = ?', [id]);
     const accountNumber = (insertedRow as RowDataPacket)[0].accountNumber as string;
     return accountNumber;
 }
 
+const fetchAccountBalance = async (userId: number) => {
+    const [balanceResult] = await connectDatabase().query(`
+            SELECT
+                Account.accountId,
+                Account.accountNumber,
+                Account.balance
+            FROM
+                Account
+            WHERE
+                Account.userId = ?;
+        `, [userId]);
+
+    const balanceData = (balanceResult as RowDataPacket)[0];
+    return balanceData;
+}
+
 export {
     updateAccount,
     createAccount,
-    fetchAccountById,
+    fetchAccountBalance,
 }

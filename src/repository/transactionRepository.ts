@@ -21,8 +21,52 @@ const fetchTransactionById = async (id: number) => {
 
 const fetchTransactionByUserId = async (id: number) => {
     const [result] = await connectDatabase().query('SELECT * FROM Transaction WHERE userId = ?', [id]);
-    const transaction = (result as RowDataPacket)[0];
+    const transaction = (result as RowDataPacket);
     return transaction;
+}
+
+const fetchTransactionUserAccountStatement = async (userId: number) => {
+    
+    const [transactionResult, balanceResult] = await Promise.all([
+        connectDatabase().query(`
+            SELECT
+                Transaction.transactionId,
+                Transaction.amount,
+                Transaction.transactionType,
+                Transaction.created_at,
+                Transaction.updated_at,
+                User.firstName,
+                User.lastName,
+                User.email,
+                Account.accountNumber
+            FROM
+                Transaction
+            JOIN
+                User ON Transaction.userId = User.userId
+            JOIN
+                Account ON Transaction.accountId = Account.accountId
+            WHERE
+                User.userId = ?;
+        `, [userId]),
+        connectDatabase().query(`
+            SELECT
+                Account.accountId,
+                Account.accountNumber,
+                Account.balance
+            FROM
+                Account
+            WHERE
+                Account.userId = ?;
+        `, [userId]),
+    ]);
+
+    const transactionData = (transactionResult as RowDataPacket)[0];
+    const balanceData = (balanceResult as RowDataPacket)[0];
+
+    return {
+        transactionData,
+        balanceData,
+    }
 }
 
 const fetchTransactionByAccountId = async (id: number) => {
@@ -31,9 +75,29 @@ const fetchTransactionByAccountId = async (id: number) => {
     return transaction;
 }
 
-
-const fetchTransactionByTransactionType = async (txnType: string) => {
-    const [result] = await connectDatabase().query('SELECT * FROM Transaction WHERE transactionType = ?', [txnType]);
+const fetchTransactionByTransactionType = async (userId:number, txnType: string) => {
+    const [result] = await connectDatabase().query(`
+    SELECT 
+        Transaction.transactionId,
+        Transaction.amount,
+        Transaction.transactionType,
+        Transaction.created_at,
+        Transaction.updated_at,
+        User.firstName,
+        User.lastName,
+        User.email,
+        Account.accountNumber
+    FROM 
+        Transaction 
+    JOIN 
+        User ON Transaction.userId = User.userId 
+    JOIN 
+        Account ON Transaction.accountId = Account.accountId 
+    WHERE 
+        User.userId = ? 
+    AND 
+        Transaction.transactionType = ?
+    `, [userId, txnType]);
     const transaction = (result as RowDataPacket)[0];
     return transaction;
 }
@@ -44,4 +108,5 @@ export {
     fetchTransactionByUserId,
     fetchTransactionByAccountId,
     fetchTransactionByTransactionType,
+    fetchTransactionUserAccountStatement,
 }

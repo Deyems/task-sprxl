@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { loginService, registerService, fetchUserService } from "../services/userService";
+import { loginService, registerService, fetchUserService, getAccountStatementService, getBalanceService } from "../services/userService";
 import { AppResponse } from "../common/utils/appResponse";
 import { ENVIRONMENT } from "../common/config/environment";
 import { isValidNumber } from "../common/utils/utilityFxns";
@@ -39,20 +39,23 @@ const getUser = async (req: Request, res: Response, next: NextFunction) => {
     }
 }
 
-const getUserAccountStatement = async (_req: Request, res: Response, next: NextFunction) => {
+const getUserAccountStatement = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const accountStatement = {};
-        return AppResponse(res, 200, accountStatement, "Successfully retrieved user"); 
+        const {id: userId} = req.params;
+        const accountStatement = await getAccountStatementService(parseInt(userId));
+        return AppResponse(res, 200, accountStatement, "Account Statement retrieved successfully");
     } catch (error) {
+        console.error(error, 'error fetching account Statement!');
         next(error);
     }
 }
 
 // getUserBalance
-const getUserBalance = async (_req: Request, res: Response, next: NextFunction) => {
+const getUserBalance = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const accountBalance = {};
-        return AppResponse(res, 200, accountBalance, "Successfully retrieved user");
+        const { id: userId } = req.params;
+        const accountBalance = await getBalanceService(parseInt(userId));
+        return AppResponse(res, 200, accountBalance, "Account Balance Successfully retrieved");
     } catch (error) {
         next(error);
     }
