@@ -35,7 +35,7 @@ const fetchUserById = async (userId: number): Promise<UserAccount | null> => {
     return foundUser;
 }
 
-const createUser = async (user: IUser): Promise<UserWithAccountNo | null> => {
+const createUserRepository = async (user: IUser): Promise<UserWithAccountNo | null> => {
 
     const [result] = await connectDatabase().query('INSERT INTO User (firstName, lastName, email, password) VALUES (?, ?, ?, ?)', [user.firstName, user.lastName, user.email, user.password]);
 
@@ -62,6 +62,6 @@ const updateUser = async (user:IUser) => {
 export {
     fetchUserByEmail,
     fetchUserById,
-    createUser,
+    createUserRepository,
     updateUser,
 }
