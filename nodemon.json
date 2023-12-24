@@ -7,5 +7,5 @@
         ".git",
         "node_modules"
     ],
-    "exec": "node -r tsconfig-paths/register -r ts-node/register ./src/server.ts"
+    "exec": "node -r tsconfig-paths/register -r ts-node/register ./src/app.ts"
 }

@@ -3,6 +3,7 @@ import { logger, stream } from "./common/utils/logger";
 import routes from "./routes"
 import helmet, { HelmetOptions } from 'helmet';
 import cookieParser from "cookie-parser";
+//@ts-ignore
 import xss from 'xss-clean';
 import hpp from "hpp";
 import cors from "cors";
@@ -125,6 +126,7 @@ app.use(
 app.use(morgan(ENVIRONMENT.APP.ENV !== 'development' ? 'combined' : 'dev', { stream }));
 // Add request time to req object
 app.use((req: Request, _res: Response, next: NextFunction) => {
+    // @ts-ignore
     req['requestTime'] = new Date().toISOString();
     next();
 });
