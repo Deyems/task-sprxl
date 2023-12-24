@@ -9,13 +9,11 @@ router.post('/register', registerHandler);
 router.post('/login', loginHandler);
 router.get('/user/:id', authenticateJWT, getUser);
 router.post('/user/:id', authenticateJWT, accountHandler);
-router.post('/user/:id/account-statement', getUserAccountStatement);
+router.post('/user/:id/account-statement', authenticateJWT, getUserAccountStatement);
 router.get('/user/:id/balance', authenticateJWT, getUserBalance);
 
 router.use('alive', (_req: Request, res: Response, _next: NextFunction) =>
     res.status(200).json({ status: 'success', message: 'Server is up and running' })
 );
-
-
 
 export default router;
