@@ -19,9 +19,11 @@ const authenticateJWT = async (req: Request, res:Response, next:NextFunction) =>
             token = token.split(" ")[1];
         }
         const user: Record<string, string | number> | JwtPayload | string = jwt.verify(token, ENVIRONMENT.JWT.ACCESS_KEY);
+
         if( ((user as Record<string, string | number>).id !== req.params.id) ){
             throw new AppError('No Permission to view another user information', 401, {});
         }
+        
         if (!user) throw new AppError('not verified', 401, {});
         return next();
     } catch (error) {

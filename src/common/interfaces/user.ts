@@ -8,6 +8,15 @@ export interface User {
     password: string;
 }
 
+export interface Account{
+    accountId: number;
+    accountNumber: string;
+    balance: number;
+    userId: number;
+}
+
+export interface UserAccount extends User, Account{}
+
 export interface IUser {
     firstName: string;
     lastName: string;
@@ -22,11 +31,6 @@ export interface UserWithAccountNo extends RegisteredUser {
 }
 
 export type LoggedInUser = Omit<IUser, 'firstName' | 'lastName'>;
-
-// export interface LoggedInUser {
-//     email: string;
-//     password: string;
-// }
 
 export interface AuthUserRequest extends Request {
     user: string | JwtPayload; //

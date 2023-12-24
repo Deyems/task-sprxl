@@ -32,15 +32,37 @@ const getUser = async (req: Request, res: Response, next: NextFunction) => {
         const {id} = req.params;
         if (!isValidNumber(id as string)) return AppResponse(res, 400, {}, "Invalid Param");
         let foundUser = await fetchUserService(Number(id));
-        return AppResponse(res, 200, foundUser, "Successfully retrieved user"); 
+        return AppResponse(res, 200, foundUser, "Successfully retrieved user");
     } catch (error) {
         console.error(error, 'error at getting User');
         next(error);
     }
 }
 
+const getUserAccountStatement = async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+        const accountStatement = {};
+        return AppResponse(res, 200, accountStatement, "Successfully retrieved user"); 
+    } catch (error) {
+        next(error);
+    }
+}
+
+// getUserBalance
+const getUserBalance = async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+        const accountBalance = {};
+        return AppResponse(res, 200, accountBalance, "Successfully retrieved user");
+    } catch (error) {
+        next(error);
+    }
+}
+
+
 export {
     registerHandler,
     loginHandler,
     getUser,
+    getUserAccountStatement,
+    getUserBalance,
 }
