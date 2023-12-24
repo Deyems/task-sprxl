@@ -47,6 +47,9 @@ const errorHandler = (err: any, req:Request, res:Response, _next:NextFunction) =
 
     if (ENVIRONMENT.APP.ENV === 'development') {
         logger.error(`${err.statusCode} - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}`);
+        
+        if (err.name === 'TokenExpiredError') err = handleJWTExpiredError();
+        
         sendErrorDev(err, res);
     } else {
         let error = err;
